@@ -1,0 +1,3 @@
+1.运行test时Provider org.springframework.boot.configurationprocessor.ConfigurationMetadataAnnotationProcessor not found时抛出异常错误
+  怀疑是lombok插件引起的 处理 是 idea下 setting -> build execuable deployment -> annotation processors -> 关闭 enable Annotation processing
+  查看 https://blog.csdn.net/hfghrth/article/details/124028147

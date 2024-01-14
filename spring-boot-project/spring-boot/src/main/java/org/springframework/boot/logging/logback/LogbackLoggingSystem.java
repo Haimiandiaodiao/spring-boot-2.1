@@ -95,28 +95,33 @@ public class LogbackLoggingSystem extends Slf4JLoggingSystem {
 	}
 
 	@Override
-	protected String[] getStandardConfigLocations() {
+	protected String[] getStandardConfigLocations() {//默认的配置文件名
 		return new String[] { "logback-test.groovy", "logback-test.xml", "logback.groovy", "logback.xml" };
 	}
 
 	@Override
 	public void beforeInitialize() {
-		LoggerContext loggerContext = getLoggerContext();
+		LoggerContext loggerContext = getLoggerContext();//得到具体的日志系统上下文
 		if (isAlreadyInitialized(loggerContext)) {
 			return;
 		}
 		super.beforeInitialize();
+		//作用是在没有初始化完成之前拒绝所有的日答应 初始化完成之后对其进行了移除
 		loggerContext.getTurboFilterList().add(FILTER);
 	}
 
 	@Override
 	public void initialize(LoggingInitializationContext initializationContext, String configLocation, LogFile logFile) {
+		//其实就是获得LoggerFactory
 		LoggerContext loggerContext = getLoggerContext();
+		//防止重复初始化
 		if (isAlreadyInitialized(loggerContext)) {
 			return;
 		}
 		super.initialize(initializationContext, configLocation, logFile);
+		//移除过滤器 也就是说此时可以接受日志输出的请求了
 		loggerContext.getTurboFilterList().remove(FILTER);
+		//标记已经初始化过了
 		markAsInitialized(loggerContext);
 		if (StringUtils.hasText(System.getProperty(CONFIGURATION_FILE_PROPERTY))) {
 			getLogger(LogbackLoggingSystem.class.getName()).warn("Ignoring '" + CONFIGURATION_FILE_PROPERTY
@@ -127,19 +132,23 @@ public class LogbackLoggingSystem extends Slf4JLoggingSystem {
 	@Override
 	protected void loadDefaults(LoggingInitializationContext initializationContext, LogFile logFile) {
 		LoggerContext context = getLoggerContext();
+		//停止并且重新进行设置
 		stopAndReset(context);
-		boolean debug = Boolean.getBoolean("logback.debug");
+		boolean debug = Boolean.getBoolean("logback.debug");//如果有这个系统变量那么就会给logback加一个打印所有状态的监听器
 		if (debug) {
 			StatusListenerConfigHelper.addOnConsoleListenerInstance(context, new OnConsoleStatusListener());
 		}
 		LogbackConfigurator configurator = debug ? new DebugLogbackConfigurator(context)
 				: new LogbackConfigurator(context);
 		Environment environment = initializationContext.getEnvironment();
+		//设置日志时间格式化参数
 		context.putProperty(LoggingSystemProperties.LOG_LEVEL_PATTERN,
 				environment.resolvePlaceholders("${logging.pattern.level:${LOG_LEVEL_PATTERN:%5p}}"));
 		context.putProperty(LoggingSystemProperties.LOG_DATEFORMAT_PATTERN, environment.resolvePlaceholders(
 				"${logging.pattern.dateformat:${LOG_DATEFORMAT_PATTERN:yyyy-MM-dd HH:mm:ss.SSS}}"));
+		//调用 apply 设置默认的设置
 		new DefaultLogbackConfiguration(initializationContext, logFile).apply(configurator);
+		//打开包信息输出功能
 		context.setPackagingDataEnabled(true);
 	}
 
@@ -276,7 +285,8 @@ public class LogbackLoggingSystem extends Slf4JLoggingSystem {
 	}
 
 	private LoggerContext getLoggerContext() {
-		ILoggerFactory factory = StaticLoggerBinder.getSingleton().getLoggerFactory();
+		//具体实现的日志框架都会有一个StaticLoggerBinder 用途是和ILoggerFactory绑定也就是作为他的实现 ，并且都在org.slf4j.impl包下
+		ILoggerFactory factory = StaticLoggerBinder.getSingleton().getLoggerFactory();//通过jcl包下
 		Assert.isInstanceOf(LoggerContext.class, factory,
 				String.format(
 						"LoggerFactory is not a Logback LoggerContext but Logback is on "

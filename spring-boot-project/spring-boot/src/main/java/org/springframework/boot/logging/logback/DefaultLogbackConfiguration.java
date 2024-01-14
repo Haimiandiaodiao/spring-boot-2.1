@@ -47,7 +47,9 @@ import org.springframework.util.ReflectionUtils;
  * @author Vedran Pavic
  */
 class DefaultLogbackConfiguration {
-
+	/**
+	 *   默认的 logging.pattern.console 的配置
+	 */
 	private static final String CONSOLE_LOG_PATTERN = "%clr(%d{${LOG_DATEFORMAT_PATTERN:-yyyy-MM-dd HH:mm:ss.SSS}}){faint} "
 			+ "%clr(${LOG_LEVEL_PATTERN:-%5p}) %clr(${PID:- }){magenta} %clr(---){faint} "
 			+ "%clr([%15.15t]){faint} %clr(%-40.40logger{39}){cyan} "
@@ -82,8 +84,11 @@ class DefaultLogbackConfiguration {
 
 	public void apply(LogbackConfigurator config) {
 		synchronized (config.getConfigurationLock()) {
+			//设置一些基础的的配置
 			base(config);
+			//设置控制器输出器
 			Appender<ILoggingEvent> consoleAppender = consoleAppender(config);
+			//日志文件的设置 和对Root的设置
 			if (this.logFile != null) {
 				Appender<ILoggingEvent> fileAppender = fileAppender(config, this.logFile.toString());
 				config.root(Level.INFO, consoleAppender, fileAppender);
@@ -110,10 +115,12 @@ class DefaultLogbackConfiguration {
 	private Appender<ILoggingEvent> consoleAppender(LogbackConfigurator config) {
 		ConsoleAppender<ILoggingEvent> appender = new ConsoleAppender<>();
 		PatternLayoutEncoder encoder = new PatternLayoutEncoder();
+		//设置控制台输出模板
 		String logPattern = this.patterns.getProperty("logging.pattern.console", CONSOLE_LOG_PATTERN);
 		encoder.setPattern(OptionHelper.substVars(logPattern, config.getContext()));
 		config.start(encoder);
 		appender.setEncoder(encoder);
+		//给appender设置名字
 		config.appender("CONSOLE", appender);
 		return appender;
 	}

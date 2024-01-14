@@ -197,19 +197,24 @@ public class LoggingApplicationListener implements GenericApplicationListener {
 	@Override
 	public void onApplicationEvent(ApplicationEvent event) {
 		if (event instanceof ApplicationStartingEvent) {
+			//应用开始时执行操作
 			onApplicationStartingEvent((ApplicationStartingEvent) event);
 		}
 		else if (event instanceof ApplicationEnvironmentPreparedEvent) {
+			//环境准备好后执行参数
 			onApplicationEnvironmentPreparedEvent((ApplicationEnvironmentPreparedEvent) event);
 		}
 		else if (event instanceof ApplicationPreparedEvent) {
+			//应用准备好时执行
 			onApplicationPreparedEvent((ApplicationPreparedEvent) event);
 		}
 		else if (event instanceof ContextClosedEvent
 				&& ((ContextClosedEvent) event).getApplicationContext().getParent() == null) {
+			//上下文关闭时
 			onContextClosedEvent();
 		}
 		else if (event instanceof ApplicationFailedEvent) {
+			//应用错误时
 			onApplicationFailedEvent();
 		}
 	}
@@ -219,10 +224,12 @@ public class LoggingApplicationListener implements GenericApplicationListener {
 		this.loggingSystem.beforeInitialize();
 	}
 
+	//对日志系统进行配置
 	private void onApplicationEnvironmentPreparedEvent(ApplicationEnvironmentPreparedEvent event) {
 		if (this.loggingSystem == null) {
 			this.loggingSystem = LoggingSystem.get(event.getSpringApplication().getClassLoader());
 		}
+		//初始化日志系统
 		initialize(event.getEnvironment(), event.getSpringApplication().getClassLoader());
 	}
 
@@ -255,18 +262,26 @@ public class LoggingApplicationListener implements GenericApplicationListener {
 	 * @param classLoader the classloader
 	 */
 	protected void initialize(ConfigurableEnvironment environment, ClassLoader classLoader) {
+		//将应用的配置设置到系统中
 		new LoggingSystemProperties(environment).apply();
+		//是否设置了日志文件配置
 		this.logFile = LogFile.get(environment);
 		if (this.logFile != null) {
+			//将日志文件配置设置到系统环境变量中
 			this.logFile.applyToSystemProperties();
 		}
+		//初始化早期的日志级别 如 java -jar myapp.jar --debug|trace
 		initializeEarlyLoggingLevel(environment);
+		//初始化日志系统 从spring-boot的配置文件 、 日志系统默认配置文件位置
 		initializeSystem(environment, this.loggingSystem, this.logFile);
+		//最终设置配置的Logger的日志级别
 		initializeFinalLoggingLevels(environment, this.loggingSystem);
+		//注册关机回调
 		registerShutdownHookIfNecessary(environment, this.loggingSystem);
 	}
 
 	private void initializeEarlyLoggingLevel(ConfigurableEnvironment environment) {
+		//获得启动参数 查看启动参数中的配置 是指spring-boot 一些组件的 日志级别
 		if (this.parseArgs && this.springBootLogging == null) {
 			if (isSet(environment, "debug")) {
 				this.springBootLogging = LogLevel.DEBUG;
@@ -284,12 +299,13 @@ public class LoggingApplicationListener implements GenericApplicationListener {
 
 	private void initializeSystem(ConfigurableEnvironment environment, LoggingSystem system, LogFile logFile) {
 		LoggingInitializationContext initializationContext = new LoggingInitializationContext(environment);
-		String logConfig = environment.getProperty(CONFIG_PROPERTY);
-		if (ignoreLogConfig(logConfig)) {
+		String logConfig = environment.getProperty(CONFIG_PROPERTY);//查看配置系统中是否有 logging.config的配置如果有的话说明要对其进行配置
+		if (ignoreLogConfig(logConfig)) {//说明没有配置 ，进行默认的配置
 			system.initialize(initializationContext, null, logFile);
 		}
 		else {
 			try {
+				//从指定的配置文件中加载设置文件进行 系统的初始化
 				ResourceUtils.getURL(logConfig).openStream().close();
 				system.initialize(initializationContext, logConfig, logFile);
 			}
@@ -309,12 +325,16 @@ public class LoggingApplicationListener implements GenericApplicationListener {
 
 	private void initializeFinalLoggingLevels(ConfigurableEnvironment environment, LoggingSystem system) {
 		if (this.springBootLogging != null) {
+			//如果设置了 springBootLogging 就将springboot设置的几个组件的日志级别记性覆盖
 			initializeLogLevel(system, this.springBootLogging);
 		}
+		//设置我们自己设置的组件日志级别
 		setLogLevels(system, environment);
 	}
 
 	protected void initializeLogLevel(LoggingSystem system, LogLevel level) {
+		//感觉像是在脱裤子放屁，但是有可能有一种情况是 被用户自己改了级别 通过springBootLogging的设置来进行强制配置
+		//或者是开启执行配置组件log
 		LOG_LEVEL_LOGGERS.getOrDefault(level, Collections.emptyList())
 				.forEach((logger) -> initializeLogLevel(system, level, logger));
 	}
@@ -325,6 +345,7 @@ public class LoggingApplicationListener implements GenericApplicationListener {
 			system.setLogLevel(logger, level);
 			return;
 		}
+		//设置默认规定的级别
 		groupLoggers.forEach((groupLogger) -> system.setLogLevel(groupLogger, level));
 	}
 
@@ -334,6 +355,7 @@ public class LoggingApplicationListener implements GenericApplicationListener {
 		}
 		Binder binder = Binder.get(environment);
 		Map<String, String[]> groups = getGroups();
+		//通过组配置来统一设置日志级别
 		binder.bind(LOGGING_GROUP, STRING_STRINGS_MAP.withExistingValue(groups));
 		Map<String, String> levels = binder.bind(LOGGING_LEVEL, STRING_STRING_MAP).orElseGet(Collections::emptyMap);
 		levels.forEach((name, level) -> {

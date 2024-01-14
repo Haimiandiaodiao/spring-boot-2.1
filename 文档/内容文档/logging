@@ -1,0 +1,19 @@
+1.spring-boot 默认使用的日志框架是logback
+2.我们可以设置日志输出内容 可以通过spring.yml 配置 logging.pattern.console  或者是通过logback自己的配置文件有四个最为人常知的时logback.xml
+3.我们设置的logging.pattern.console可以配置在内部是被解析为转换链的而不是使用的正则匹配来对内容进行填充的所以其格式化内容的速度还是很快的
+    我们查看  ch.qos.logback.core.pattern.PatternLayoutBase.start 代码 ， 解析后的链的对象会被放到ch.qos.logback.core.pattern.PatternLayoutBase.head 中
+    遇到要格式化内容时要使用head来进行格式化
+
+4.相对的一些类
+    DefaultLogbackConfiguration  logback默认的配置 ，如果我们都有自己配置默认走的配置类
+
+5.日志的初始化流程 LoggingApplicationListener.onApplicationEvent的ApplicationStartingEvent时间触发加载日志系统 ->
+  LoggingSystem.get(java.lang.ClassLoader)对使用的日志系统进行探测 默认会创建LogbackLoggingSystem 但是也可以通过系统配置来进行设置 ->
+  LogbackLoggingSystem.beforeInitialize 调用日志系统的初始化对日志系统进行初始化 ->
+  LogbackLoggingSystem.getLoggerContext 关键方法 ->
+  StaticLoggerBinder.getSingleton().getLoggerFactory() 具体实现的日志框架都会有一个StaticLoggerBinder 用途是和ILoggerFactory绑定也就是作为他的实现 ，并且实现者都声明在org.slf4j.impl包下
+  以便外部使用这获得LoggerFactory
+
+
+
+  LogbackLoggingSystem.beforeInitialize

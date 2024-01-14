@@ -54,9 +54,11 @@ public abstract class AbstractLoggingSystem extends LoggingSystem {
 	@Override
 	public void initialize(LoggingInitializationContext initializationContext, String configLocation, LogFile logFile) {
 		if (StringUtils.hasLength(configLocation)) {
+			//从指定的配置文件中进行配置加载
 			initializeWithSpecificConfig(initializationContext, configLocation, logFile);
 			return;
 		}
+		//无配置的设置
 		initializeWithConventions(initializationContext, logFile);
 	}
 
@@ -67,6 +69,8 @@ public abstract class AbstractLoggingSystem extends LoggingSystem {
 	}
 
 	private void initializeWithConventions(LoggingInitializationContext initializationContext, LogFile logFile) {
+		//得到内部的配置预定配置文件的名字进行查找 - 也就是logback自己认定的配置地址
+		// "logback-test.groovy", "logback-test.xml", "logback.groovy", "logback.xml"
 		String config = getSelfInitializationConfig();
 		if (config != null && logFile == null) {
 			// self initialization has occurred, reinitialize in case of property changes
@@ -74,13 +78,13 @@ public abstract class AbstractLoggingSystem extends LoggingSystem {
 			return;
 		}
 		if (config == null) {
-			config = getSpringInitializationConfig();
+			config = getSpringInitializationConfig();//得到spring标记的配置文件 就是原文件名后 后缀前加-spring的文件 如logback-spring.xml
 		}
 		if (config != null) {
 			loadConfiguration(initializationContext, config, logFile);
 			return;
 		}
-		loadDefaults(initializationContext, logFile);
+		loadDefaults(initializationContext, logFile);//加载默认的配置
 	}
 
 	/**

@@ -40,7 +40,7 @@ public abstract class LoggingSystem {
 	/**
 	 * A System property that can be used to indicate the {@link LoggingSystem} to use.
 	 */
-	public static final String SYSTEM_PROPERTY = LoggingSystem.class.getName();
+	public static final String  SYSTEM_PROPERTY = LoggingSystem.class.getName();
 
 	/**
 	 * The value of the {@link #SYSTEM_PROPERTY} that can be used to indicate that no
@@ -58,6 +58,7 @@ public abstract class LoggingSystem {
 	private static final Map<String, String> SYSTEMS;
 
 	static {
+		//logback 、 log4j  优先探测logback
 		Map<String, String> systems = new LinkedHashMap<>();
 		systems.put("ch.qos.logback.core.Appender", "org.springframework.boot.logging.logback.LogbackLoggingSystem");
 		systems.put("org.apache.logging.log4j.core.impl.Log4jContextFactory",

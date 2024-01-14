@@ -101,6 +101,8 @@ public class LoggingSystemProperties {
 
 	public void apply(LogFile logFile) {
 		PropertyResolver resolver = getPropertyResolver();
+		//内部对PropertyName添加了logging的前缀
+		//将应用日志配置设置到系统配置中
 		setSystemProperty(resolver, EXCEPTION_CONVERSION_WORD, "exception-conversion-word");
 		setSystemProperty(PID_KEY, new ApplicationPid().toString());
 		setSystemProperty(resolver, CONSOLE_LOG_PATTERN, "pattern.console");

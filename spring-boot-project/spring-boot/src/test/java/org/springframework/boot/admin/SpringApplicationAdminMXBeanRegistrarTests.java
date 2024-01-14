@@ -27,6 +27,8 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.WebApplicationType;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
@@ -81,6 +83,9 @@ public class SpringApplicationAdminMXBeanRegistrarTests {
 		});
 		this.context = application.run();
 		assertThat(isApplicationReady(objectName)).isTrue();
+		//测试日志输出
+		Logger dd = LoggerFactory.getLogger("dd");
+		dd.info("test log pattern");
 	}
 
 	@Test

@@ -43,6 +43,7 @@ public abstract class Slf4JLoggingSystem extends AbstractLoggingSystem {
 	@Override
 	public void beforeInitialize() {
 		super.beforeInitialize();
+		//配置JUL绑定处理器
 		configureJdkLoggingBridgeHandler();
 	}
 
@@ -64,8 +65,12 @@ public abstract class Slf4JLoggingSystem extends AbstractLoggingSystem {
 
 	private void configureJdkLoggingBridgeHandler() {
 		try {
+			//判断是否引入了<groupId>org.slf4j</groupId> <artifactId>jul-to-slf4j</artifactId> 因为其中探测了SLF4JBridgeHandler jul绑定slf4j处理器存在
+			//和是否Jul只使用了ConsoleHandler 将日志打印到控制台
 			if (isBridgeJulIntoSlf4j()) {
-				removeJdkLoggingBridgeHandler();
+				//移除JUL 所有的处理器 也就是移除了ConsoleHandler
+ 				removeJdkLoggingBridgeHandler();
+ 				//将JUL 绑定到slf4j上
 				SLF4JBridgeHandler.install();
 			}
 		}
